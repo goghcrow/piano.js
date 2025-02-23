@@ -1,1 +1,1 @@
-![preview](https://github.com/goghcrow/piano.js/blob/main/preview.jpg?raw=true)
+![preview](https://github.com/goghcrow/piano.js/blob/main/preview.png?raw=true)
