@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piano</title>
+    <link rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+    <script src="midi.js"></script>
+    <script src="piano.js"></script>
+    <script src="render.js"></script>
+    <div class="piano-select-container">
+        <select class="piano-select" name="timbre" id="timbre"></select>
+    </div>
+    <div class="piano-container">
+        <canvas id="pianoCanvas" width="1200" height="300"></canvas>
+    </div>
+
+    <script>
+      // 键位配置
+      const KEY_MAP = {
+        Digit1: 'C4',
+        F1: 'C#4',
+        Digit2: 'D4',
+        F2: 'D#4',
+        Digit3: 'E4',
+        Digit4: 'F4',
+        F4: 'F#4',
+        Digit5: 'G4',
+        F5: 'G#4',
+        Digit6: 'A4',
+        F6: 'A#4',
+        Digit7: 'B4',
+        Digit8: 'C5',
+        F8: 'C#5',
+        Digit9: 'D5',
+        F9: 'D#5',
+        Digit0: 'E5',
+        Minus: 'F5',
+        F11: 'F#5',
+        Equal: 'G5',
+        F12: 'G#5',
+        Backspace: 'A5'
+      }
+
+      const audioCtx = new globalThis.AudioContext()
+      const piano = new Piano(audioCtx, { timbre: '明亮' })
+
+
+      const canvas = document.getElementById('pianoCanvas')
+      const ctx = canvas.getContext('2d')
+      const pianoRender = new PianoRenderer(ctx, { ...PIANO_CONFIG, keymap: KEY_MAP})
+      pianoRender.render()
+
+      let $timbreSelect = null
+      document.addEventListener('DOMContentLoaded', _ => {
+        $timbreSelect = document.querySelector('#timbre')
+
+        Object.keys(piano.config.oscs).forEach(k => {
+          const option = new Option(k, k /*id*/)
+          $timbreSelect.appendChild(option)
+        })
+        $timbreSelect.value = piano.config.timbre
+        $timbreSelect.addEventListener('change', _ => {
+          piano.config.timbre = $timbreSelect.value
+        })
+      })
+      
+      window.addEventListener('keydown', e => {
+        if (!KEY_MAP[e.code]) return
+        const note = noteNameToMidi(KEY_MAP[e.code])
+        piano.pressKey(note)
+        pianoRender.pressKey(note)
+      })
+      window.addEventListener('keyup', e => {
+        if (!KEY_MAP[e.code]) return
+        const note = noteNameToMidi(KEY_MAP[e.code])
+        piano.releaseKey(note)
+        pianoRender.releaseKey(note)
+      })
+
+      // todo 点击调用 piano pressNote 发生
+      // ==========================================
+
+      //   // 修改为支持多键同时按下
+      //   const activeKeys = new Set()
+
+      //   function isKeyHit(x, y, key) {
+      //     return (
+      //       x > key.x &&
+      //       x < key.x + key.width &&
+      //       y > key.y &&
+      //       y < key.y + key.height
+      //     )
+      //   }
+
+      //   // 鼠标按下事件
+      //   canvas.addEventListener('mousedown', e => {
+      //     const rect = canvas.getBoundingClientRect()
+      //     const x = e.clientX - rect.left
+      //     const y = e.clientY - rect.top
+
+      //     pianoRender.keys.forEach(key => {
+      //       if (isKeyHit(x, y, key)) {
+      //         if (!key.pressed) {
+      //           key.pressed = true
+      //           activeKeys.add(key)
+      //           pianoRender.render()
+      //           dispatchPianoEvent('pianoKeyDown', key.midiNote)
+      //         }
+      //       }
+      //     })
+      //   })
+
+      //   // 鼠标释放事件
+      //   canvas.addEventListener('mouseup', e => {
+      //     const rect = canvas.getBoundingClientRect()
+      //     const x = e.clientX - rect.left
+      //     const y = e.clientY - rect.top
+
+      //     activeKeys.forEach(key => {
+      //       if (isKeyHit(x, y, key)) {
+      //         key.pressed = false
+      //         dispatchPianoEvent('pianoKeyUp', key.midiNote)
+      //       }
+      //     })
+      //     activeKeys.clear()
+      //     pianoRender.render()
+      //   })
+
+      //   // 防止鼠标移出后状态卡住
+      //   canvas.addEventListener('mouseleave', () => {
+      //     activeKeys.forEach(key => {
+      //       key.pressed = false
+      //       dispatchPianoEvent('pianoKeyUp', key.midiNote)
+      //     })
+      //     activeKeys.clear()
+      //     pianoRender.render()
+      //   })
+
+      //   // 监听按键事件
+      //   canvas.addEventListener('pianoKeyDown', e => {
+      //     console.log(
+      //       '按下:',
+      //       e.detail,
+      //       '当前按下:',
+      //       [...activeKeys].map(k => k.midiNote)
+      //     )
+      //   })
+
+      //   canvas.addEventListener('pianoKeyUp', e => {
+      //     console.log('释放:', e.detail)
+      //   })
+    </script>
+  </body>
+</html>
